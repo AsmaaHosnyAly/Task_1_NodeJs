@@ -1,12 +1,15 @@
-const addForm = document.querySelector("#addForm")
+const addForm = document.querySelector("#addForm");
 const contentWrap= document.querySelector("#contentWrap")
 const taskHeads = ["taskTitle", "age","name","phone"]
+const userData=document.querySelector("#userData");
+const editForm=document.querySelector("#editForm");
 // read from storage //union operator ||
-const readFromStorage = (key) =>{
-    let data 
+const readFromStorage = (key,dataType="") =>{
+    let data,myData;
+    myData=localStorage.getItem(key);
+    if(dataType=="string") return myData
     try{
-        // data = JSON.parse(localStorage.getItem(key)) || [] 
-        data = JSON.parse(localStorage.getItem(key))
+         data = JSON.parse(myData || [] )
         if(!Array.isArray(data)) throw new Error("is not array")
     }
     catch(e){
@@ -39,6 +42,7 @@ if(addForm){
         const allTasks = readFromStorage("tasks")
         allTasks.push(task)
         writeDataToStorage("tasks", allTasks)
+        
         addForm.reset()
         window.location.href = "index.html"
     })    
@@ -105,13 +109,19 @@ const showAll = (allData) =>{
         const td = createMyOwnElement(tr, "td", null, null)
         
         const td1 = createMyOwnElement(tr, "td", null, null)
-        const statusBtn = createMyOwnElement(td1, "button", "Activated","btn btn-success mx-3")
+        const statusBtn = createMyOwnElement(td1, "button", "Active","btn btn-success mx-3")
         const showBtn = createMyOwnElement(td, "button", "show","btn btn-primary mx-3")
         const editBtn = createMyOwnElement(td, "button", "Edit","btn btn-warning mx-3")
         const delBtn = createMyOwnElement(td, "button", "Delete","btn btn-danger mx-3")
+        // showBtn.addEventListener("click", function(e){
+        //     window.alert(`${i}`)
+        //    console.log(task.id);
+        // }) 
         showBtn.addEventListener("click", function(e){
-            window.alert(`${i}`)
-        })     
+            localStorage.setItem("single",i);
+            window.location.href = "showSingle.html"
+        }) 
+        editBtn.addEventListener("click", (e)=> editSingle(i))   
         delBtn.addEventListener("click", (e)=>{
             allData.splice(i, 1)
             writeDataToStorage("tasks",allData)
@@ -122,14 +132,14 @@ const showAll = (allData) =>{
         statusBtn.addEventListener("click", (e)=>{ 
         if(!task.status){
             statusBtn.classList="btn btn-danger";
-            statusBtn.textContent="Inactivated"
+            statusBtn.textContent="Inactive"
             task.status=true;
             writeDataToStorage("tasks",allData)
         }
         else
        {
         statusBtn.classList="btn btn-success";
-        statusBtn.textContent="Activated";
+        statusBtn.textContent="Active";
         task.status=false;
         writeDataToStorage("tasks",allData)
 
@@ -144,8 +154,62 @@ if(contentWrap){
     showAll(allData)
 }
 
+
+if(userData){
+    const index=readFromStorage('single',"string");
+    const allData= readFromStorage("tasks");
+    try{
+        const user = allData[index]
+        createMyOwnElement(userData, "div", user.id,null)
+        createMyOwnElement(userData, "h5", user.name,null)
+        createMyOwnElement(userData, "h4",user.phone,null)    
+    }
+    catch(e){
+        createMyOwnElement(userData, "div", "no user with this id", "alert alert-danger")
+    }
+}
+
 // show single (read single)
+const showSingle=()=>{
+    addForm.addEventListener("submit", function(e){
+        e.preventDefault()
+        const task = { status: false, id: Date.now() }
+        taskHeads.forEach( h => task[h] = addForm.elements[h].value )
+       console.log(taskHeads);  
+    })   
 
+}
+const editSingle = (i)=>{
+    localStorage.setItem("edit", i)
+    window.location.href="edit.html"
+}
 // edit (update)
+if(editForm){
+    const index = readFromStorage('edit', "string")
+    const allData = readFromStorage("tasks")
+    const task = allData[index]
+    console.log(task)
+    taskHeads.forEach( h => editForm.elements[h].value = task[h] )
+    editForm.addEventListener("submit", (e)=>{
+        e.preventDefault()
+        taskHeads.forEach( h =>  allData[index][h]=editForm.elements[h].value )
+        writeDataToStorage("tasks",allData)
+        editForm.reset()
+        window.location.href="index.html"
+        
+    })
+}
 
-// delete (delete)
+
+// const isEven=(number,callback)=>{
+//   if(number%2==0) callback("Even number","true");
+//   else return callback("odd number","false");
+// }
+
+
+// const myPromise=(val)=>{
+//     return new Promise((resolve,rejected)=>{
+//     setTimeout((console.log(data)),1200)
+//     })
+// }
+// myPromise(data).then((data)=>console.log(data)).catch((error)=>console.log(error));
